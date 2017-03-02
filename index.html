@@ -8,116 +8,14 @@
 </head>
 
 <body>
-  <button onclick="vibrate()">Vibrate</button>
-  <button onclick="getName()">Get Name</button>
-  <button onclick="getBatteryLvl()">getBatteryLvl</button>
-  </form>
-  <script>
-    function anyNamedDevice() {
-      // This is the closest we can get for now to get all devices.
-      // https://github.com/WebBluetoothCG/web-bluetooth/issues/234
-      return Array.from('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-        .map(c => ({
-          namePrefix: c
-        }))
-        .concat({
-          name: ''
-        });
-    }
-
-    function vibrate() {
-      navigator.bluetooth.requestDevice({
-          filters: [{
-            name: 'MI1S'
-          }],
-          optionalServices: [0x1802]
-        })
-        .then(function (device) {
-          // Step 2: Connect to it
-          return device.gatt.connect();
-        })
-        .then(function (server) {
-          // debugger;
-          // Step 3: Get the Service
-          return server.getPrimaryService(0x1802);
-        })
-        .then(function (service) {
-          // debugger;
-          // Step 4: get the Characteristic
-          return service.getCharacteristic(0x2A06);
-        })
-        .then(function (characteristic) {
-          // Step 5: Write to the characteristic
-          var data = new Uint8Array([0x02]);
-          return characteristic.writeValue(data);
-        })
-        .catch(function (error) {
-          // And of course: error handling!
-          console.error('Connection failed!', error);
-        });
-    }
-
-    function getName() {
-      navigator.bluetooth.requestDevice({
-          filters: [{
-            name: 'MI1S'
-          }]
-        })
-        .then(device => {
-          console.log('> Name:             ' + device.name);
-          console.log('> Id:               ' + device.id);
-          console.log('> Connected:        ' + device.gatt.connected);
-        })
-    }
-
-    function getBatteryLvl() {
-      navigator.bluetooth.requestDevice({
-        filters: [{
-            name: 'MI1S'
-          }],
-          optionalServices: [0xfee0]
-      })
-      .then(device => device.gatt.connect())
-      .then(server => server.getPrimaryService(0xfee0))
-      .then(service => service.getCharacteristic(0xff0c))
-      .then(characteristic => characteristic.readValue())
-      .then(data => console.log(`${data.getUint8(0)}%`))
-      .catch(e => console.error(e))
-    }
-
-    function uintToString(uintArray) {
-      var encodedString = String.fromCharCode.apply(null, uintArray),
-        decodedString = decodeURIComponent(escape(encodedString));
-      return decodedString;
-    }
-
-    function arrayBufferToString(buffer) {
-      var arr = new Uint8Array(buffer);
-      var str = String.fromCharCode.apply(String, arr);
-      if (/[\u0080-\uffff]/.test(str)) {
-        throw new Error("this string seems to contain (still encoded) multibytes");
-      }
-      return str;
-    }
-
-    function parse(value) {
-      // In Chrome 50+, a DataView is returned instead of an ArrayBuffer.
-      value = value.buffer ? value : new DataView(value);
-      let result = {};
-      let index = 1;
-      debugger;
-
-      result.test = value.getInt8(index);
-      result.test2 = value.getInt16(index);
-      result.test3 = value.getUint8(index);
-      result.test4 = value.getUint16(index);
-      result.test5 = value.getUint32(index);
-      result.test6 = value.getFloat32(index);
-      // result.test7 = value.getFloat64(index);
-
-      return result;
-    }
-  </script>
+  <p>Xiaomi Mi Band 1S playground</p>
+  <ul>
+    <li><button onclick="vibrate()">Vibrate</button></li>
+    <li><button onclick="getName()">Get Name</button></li>
+    <li><button onclick="getBatteryLvl()">Get Battery Level</button></li>
+  </ul>
+  <p><button onclick="disconnect()">Disconnect</button></p>
+  <script src="scripts.js"></script>
 </body>
 
 </html>
