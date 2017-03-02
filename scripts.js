@@ -13,6 +13,16 @@ function connect() {
         .catch(console.error)
 }
 
+function disconnect() {
+    if (device) {
+        device.gatt.disconnect()
+            .catch(e => console.error(e));
+        console.log('Disconnected');
+    } else {
+        console.log('Not connected!');
+    }
+}
+
 function checkIfConnected() {
     if (!device || !server) {
         return connect();
@@ -56,16 +66,6 @@ function getBatteryLvl() {
         .then(characteristic => characteristic.readValue())
         .then(data => console.log(`${data.getUint8(0)}%`))
         .catch(e => console.error(e))
-}
-
-function disconnect() {
-    if (device) {
-        device.gatt.disconnect()
-            .catch(e => console.error(e));
-        console.log('Disconnected');
-    } else {
-        console.log('Not connected!');
-    }
 }
 
 
