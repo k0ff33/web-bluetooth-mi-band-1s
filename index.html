@@ -9,7 +9,8 @@
 
 <body>
   <button onclick="vibrate()">Vibrate</button>
-  <button onclick="test()">Test</button>
+  <button onclick="getName()">Get Name</button>
+  <button onclick="getBatteryLvl()">getBatteryLvl</button>
   </form>
   <script>
     function anyNamedDevice() {
@@ -26,7 +27,6 @@
 
     function vibrate() {
       navigator.bluetooth.requestDevice({
-          //filters: anyNamedDevice()
           filters: [{
             name: 'MI1S'
           }],
@@ -57,48 +57,32 @@
         });
     }
 
-    function test() {
+    function getName() {
       navigator.bluetooth.requestDevice({
-          //filters: anyNamedDevice()
           filters: [{
+            name: 'MI1S'
+          }]
+        })
+        .then(device => {
+          console.log('> Name:             ' + device.name);
+          console.log('> Id:               ' + device.id);
+          console.log('> Connected:        ' + device.gatt.connected);
+        })
+    }
+
+    function getBatteryLvl() {
+      navigator.bluetooth.requestDevice({
+        filters: [{
             name: 'MI1S'
           }],
           optionalServices: [0xfee0]
-        })
-        .then(function (device) {
-          // Step 2: Connect to it
-          return device.gatt.connect();
-        })
-        .then(function (server) {
-          // Step 3: Get the Service
-          return server.getPrimaryService(0xfee0);
-        })
-        .then(function (service) {
-          // Step 4: get the Characteristic
-          return service.getCharacteristic(0xFF02);
-        })
-        .then(function (characteristic) {
-          // Step 5: Write to the characteristic
-          // debugger;
-          // var data = new Uint8Array([0x02]);
-          return characteristic.readValue();
-        })
-        .then(name => {
-          let test = parse(name);
-          console.log(test);
-
-          // name = name.buffer ? name : new DataView(name);
-          // // console.log('Battery percentage:', value.getUint8());
-          // let arr = new Uint8Array(name);
-          // let realName = uintToString(arr);
-          // console.log(realName)
-
-          debugger;
-        })
-        .catch(function (error) {
-          // And of course: error handling!
-          console.error('Connection failed!', error);
-        });
+      })
+      .then(device => device.gatt.connect())
+      .then(server => server.getPrimaryService(0xfee0))
+      .then(service => service.getCharacteristic(0xff0c))
+      .then(characteristic => characteristic.readValue())
+      .then(data => console.log(`${data.getUint8(0)}%`))
+      .catch(e => console.error(e))
     }
 
     function uintToString(uintArray) {
