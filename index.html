@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MI1S Web Bluetooth Test</title>
+</head>
+
+<body>
+  <button onclick="vibrate()">Vibrate</button>
+  <button onclick="test()">Test</button>
+  </form>
+  <script>
+    function anyNamedDevice() {
+      // This is the closest we can get for now to get all devices.
+      // https://github.com/WebBluetoothCG/web-bluetooth/issues/234
+      return Array.from('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+        .map(c => ({
+          namePrefix: c
+        }))
+        .concat({
+          name: ''
+        });
+    }
+
+    function vibrate() {
+      navigator.bluetooth.requestDevice({
+          //filters: anyNamedDevice()
+          filters: [{
+            name: 'MI1S'
+          }],
+          optionalServices: [0x1802]
+        })
+        .then(function (device) {
+          // Step 2: Connect to it
+          return device.gatt.connect();
+        })
+        .then(function (server) {
+          // debugger;
+          // Step 3: Get the Service
+          return server.getPrimaryService(0x1802);
+        })
+        .then(function (service) {
+          // debugger;
+          // Step 4: get the Characteristic
+          return service.getCharacteristic(0x2A06);
+        })
+        .then(function (characteristic) {
+          // Step 5: Write to the characteristic
+          var data = new Uint8Array([0x02]);
+          return characteristic.writeValue(data);
+        })
+        .catch(function (error) {
+          // And of course: error handling!
+          console.error('Connection failed!', error);
+        });
+    }
+
+    function test() {
+      navigator.bluetooth.requestDevice({
+          //filters: anyNamedDevice()
+          filters: [{
+            name: 'MI1S'
+          }],
+          optionalServices: [0xfee0]
+        })
+        .then(function (device) {
+          // Step 2: Connect to it
+          return device.gatt.connect();
+        })
+        .then(function (server) {
+          // Step 3: Get the Service
+          return server.getPrimaryService(0xfee0);
+        })
+        .then(function (service) {
+          // Step 4: get the Characteristic
+          return service.getCharacteristic(0xFF02);
+        })
+        .then(function (characteristic) {
+          // Step 5: Write to the characteristic
+          // debugger;
+          // var data = new Uint8Array([0x02]);
+          return characteristic.readValue();
+        })
+        .then(name => {
+          let test = parse(name);
+          console.log(test);
+
+          // name = name.buffer ? name : new DataView(name);
+          // // console.log('Battery percentage:', value.getUint8());
+          // let arr = new Uint8Array(name);
+          // let realName = uintToString(arr);
+          // console.log(realName)
+
+          debugger;
+        })
+        .catch(function (error) {
+          // And of course: error handling!
+          console.error('Connection failed!', error);
+        });
+    }
+
+    function uintToString(uintArray) {
+      var encodedString = String.fromCharCode.apply(null, uintArray),
+        decodedString = decodeURIComponent(escape(encodedString));
+      return decodedString;
+    }
+
+    function arrayBufferToString(buffer) {
+      var arr = new Uint8Array(buffer);
+      var str = String.fromCharCode.apply(String, arr);
+      if (/[\u0080-\uffff]/.test(str)) {
+        throw new Error("this string seems to contain (still encoded) multibytes");
+      }
+      return str;
+    }
+
+    function parse(value) {
+      // In Chrome 50+, a DataView is returned instead of an ArrayBuffer.
+      value = value.buffer ? value : new DataView(value);
+      let result = {};
+      let index = 1;
+      debugger;
+
+      result.test = value.getInt8(index);
+      result.test2 = value.getInt16(index);
+      result.test3 = value.getUint8(index);
+      result.test4 = value.getUint16(index);
+      result.test5 = value.getUint32(index);
+      result.test6 = value.getFloat32(index);
+      // result.test7 = value.getFloat64(index);
+
+      return result;
+    }
+  </script>
+</body>
+
+</html>
