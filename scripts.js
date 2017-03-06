@@ -5,26 +5,30 @@ function connect() {
             filters: [{
                 name: 'MI1S'
             }],
-            optionalServices: [0x1802, 0xfee0]
+            // acceptAllDevices: true,
+            optionalServices: [0x1802, 0xfee0, 0x180d]
         })
         .then(dev => device = dev)
         .then(device => device.gatt.connect())
         .then(serv => server = serv)
+        // .then(server => server.getPrimaryService(0xfee0))
+        // .then(service => service.getCharacteristic(0xff0a))
+        // .then(characteristic => characteristic.readValue()) // this theoretically helps with connection problems
+        // .then(data => console.log(data.getUint8(0)))
         .catch(console.error)
 }
 
 function disconnect() {
     if (device) {
         device.gatt.disconnect()
-            .catch(e => console.error(e));
-        console.log('Disconnected');
+        console.lofg(`Disconnected device: ${device.name}`);
     } else {
         console.log('Not connected!');
     }
 }
 
 function checkIfConnected() {
-    if (!device || !server) {
+    if (!device || !server || !device.gatt.connected) {
         return connect();
     } else {
         return Promise.resolve();
@@ -34,17 +38,12 @@ function checkIfConnected() {
 function vibrate() {
     checkIfConnected()
         .then(() => server.getPrimaryService(0x1802))
-        .then(function (service) {
-            // debugger;
-            // Step 4: get the Characteristic
-            return service.getCharacteristic(0x2A06);
-        })
-        .then(function (characteristic) {
-            // Step 5: Write to the characteristic
+        .then(service => service.getCharacteristic(0x2A06))
+        .then(characteristic => {
             var data = new Uint8Array([0x02]);
             return characteristic.writeValue(data);
         })
-        .catch(function (error) {
+        .catch(error => {
             // And of course: error handling!
             console.error('Connection failed!', error);
         });
@@ -59,15 +58,72 @@ function getName() {
         })
 }
 
+function pair() {
+    let serv;
+    checkIfConnected()
+    .then(() => server.getPrimaryService(0xfee0))
+    .then(service => {
+        serv = service;
+        return service.getCharacteristic(0xff0f);
+    })
+    .then(characteristic => characteristic.writeValue(new Uint8Array([2]))) // pair
+    .then(data => {
+        let res = data.getUint8(0);
+        if (res == 0) {
+            console.log('Successfully paired!');
+        }
+        else {
+            throw new Error('Pairing error');
+        }
+    })
+    .then(() => serv.getCharacteristic(0xff01)) // request device info
+    .then(characteristic => characteristic.readValue())
+    // .then(() => serv.getCharacteristic(0xff04)) // user info
+    .catch(console.error)
+}
+
 function getBatteryLvl() {
     checkIfConnected()
         .then(() => server.getPrimaryService(0xfee0))
         .then(service => service.getCharacteristic(0xff0c))
         .then(characteristic => characteristic.readValue())
-        .then(data => console.log(`${data.getUint8(0)}%`))
+        .then(data => {
+            let lastCharged = new Date(data.getUint8(1) + 2000, data.getUint8(2), data.getUint8(3), data.getUint8(4), data.getUint8(5), data.getUint8(6));
+            console.log(`Battery: ${data.getUint8(0)}%`)
+            console.log(`Last charged: ${lastCharged.toString()}`)
+        })
         .catch(e => console.error(e))
 }
 
+function getHR() {
+    checkIfConnected()
+        .then(() => server.getPrimaryService(0x180d))
+        .then(service => service.getCharacteristic(0x2A39))
+        .then(characteristic => {
+            let data = new Uint8Array([0x15, 0x1, 0]);
+            return characteristic.writeValue(data)
+                .then(() => characteristic);
+        })
+        .then(characteristic => {
+            let data = new Uint8Array([0x15, 0x2, 0]);
+            return characteristic.writeValue(data)
+                .then(() => characteristic);
+        })
+        .then(characteristic => {
+            let data = new Uint8Array([0x15, 0x2, 1]);
+            return characteristic.writeValue(data)
+                .then(() => characteristic);
+        })
+        .then(characteristic => characteristic.startNotifications())
+        .then(handleHeartRateMeasurement)
+        .catch(e => console.error(e))
+}
+
+function handleHeartRateMeasurement(heartRateMeasurement) {
+  heartRateMeasurement.addEventListener('characteristicvaluechanged', event => {
+      debugger;
+  });
+}
 
 
 /* Helper Functions */
@@ -85,22 +141,4 @@ function arrayBufferToString(buffer) {
         throw new Error("this string seems to contain (still encoded) multibytes");
     }
     return str;
-}
-
-function parse(value) {
-    // In Chrome 50+, a DataView is returned instead of an ArrayBuffer.
-    value = value.buffer ? value : new DataView(value);
-    let result = {};
-    let index = 1;
-    debugger;
-
-    result.test = value.getInt8(index);
-    result.test2 = value.getInt16(index);
-    result.test3 = value.getUint8(index);
-    result.test4 = value.getUint16(index);
-    result.test5 = value.getUint32(index);
-    result.test6 = value.getFloat32(index);
-    // result.test7 = value.getFloat64(index);
-
-    return result;
 }
