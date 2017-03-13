@@ -1,23 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MI1S Web Bluetooth Test</title>
-</head>
-
-<body>
-  <p>Xiaomi Mi Band 1S playground</p>
-  <ul>
-    <li><button onclick="pair()">Pair</button></li>
-    <li><button onclick="vibrate()">Vibrate</button></li>
-    <li><button onclick="getName()">Get Name</button></li>
-    <li><button onclick="getBatteryLvl()">Get Battery Level</button></li>
-    <li><button onclick="getHR()">Get HR</button></li>
-  </ul>
-  <p><button onclick="disconnect()">Disconnect</button></p>
-  <script src="scripts.js"></script>
-</body>
-
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Mi Band Demo</title>
+    <link rel="icon" sizes="192x192" href="../favicon.png">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div id="container">
+      <div id="statusText">GET &#x1f463;</div>
+      <div id="subStatusText"></div>
+    </div>
+    <script src="miBand.js"></script>
+    <script src="app.js"></script>
+  </body>
 </html>
