@@ -4,25 +4,38 @@ var subStatusText = document.querySelector('#subStatusText');
 
 var offset = 0;
 
-statusText.addEventListener('click', function() {
-  statusText.textContent = 'Walk...';
-  miBand.connect()
-  .then(() => miBand.startNotifications().then(handleNotifications))
-  .then(() => {
-    let reset = (localStorage.length === 0);
-    return miBand.pair(reset);
-  })
-  .then(() => miBand.getSteps())
-  .then(steps => {
-    var today = new Date().toJSON().substr(0, 10);
-    offset = steps - parseInt(localStorage.getItem(today) || 0);
-    updateSteps(steps);
-    return Promise.resolve();
-  })
-  .then(() => miBand.startNotificationsSteps().then(handleSteps))
-  .catch(error => {
-    statusText.textContent = error;
-  });
+statusText.addEventListener('click', function () {
+  if (miBand.device && miBand.device.gatt.connected) {
+    return;
+  } else {
+    statusText.textContent = 'Connecting...';
+    miBand.connect()
+      .then(() => {
+        return Promise.all([
+          miBand.getDeviceName(),
+          miBand.getBatteryInfo(),
+          miBand.getDeviceInfo()
+        ]);
+      })
+      .then(console.log)
+      .then(() => statusText.textContent = 'Walk...')
+      .then(() => miBand.startNotifications().then(handleNotifications))
+      .then(() => {
+        let reset = (localStorage.length === 0);
+        return miBand.pair(reset);
+      })
+      .then(() => miBand.getSteps())
+      .then(steps => {
+        var today = new Date().toJSON().substr(0, 10);
+        offset = steps - parseInt(localStorage.getItem(today) || 0);
+        updateSteps(steps);
+        return Promise.resolve();
+      })
+      .then(() => miBand.startNotificationsSteps().then(handleSteps))
+      .catch(error => {
+        statusText.textContent = error;
+      });
+  }
 });
 
 function handleNotifications(notifiCharacteristic) {
