@@ -37,7 +37,7 @@ function handleSteps(stepsCharacteristic) {
     var steps = miBand.parseSteps(data);
 
     var today = new Date().toJSON().substr(0, 10);
-    localStorage.setItem(today, steps - offset);
+    localStorage.setItem(today, (steps - offset > 0) ? steps - offset : steps);
 
     updateSteps(steps);
     updateStats();
