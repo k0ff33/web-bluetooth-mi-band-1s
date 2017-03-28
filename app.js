@@ -1,6 +1,6 @@
-var canvas = document.querySelector('canvas');
 var statusText = document.querySelector('#statusText');
 var subStatusText = document.querySelector('#subStatusText');
+var deviceInfo = document.querySelector('#deviceInfo');
 
 var offset = 0;
 
@@ -17,7 +17,20 @@ statusText.addEventListener('click', function () {
           miBand.getDeviceInfo()
         ]);
       })
-      .then(console.log)
+      .then(data => {
+        let deviceName = data[0].replace(/[^a-zA-Z0-9]/g,'');
+        let batteryInfo = data[1];
+        let firmwareInfo = data[2];
+
+        let div = `
+        <div class="left">Name:</div><div class="right">${deviceName}</div>
+        <div class="left">Battery:</div><div class="right">${batteryInfo.get('batteryLevel')}%</div>
+        <div class="left">Last charged:</div><div class="right">${new Date(batteryInfo.get('batteryLastCharge')).toGMTString()}</div>
+        <div class="left">Total charges:</div><div class="right">${batteryInfo.get('batteryCharges')}</div>
+        <div class="left">Firmware Version:</div><div class="right">${firmwareInfo.get('firmwareVersion')}</div>
+        <div class="left">Profile version:</div><div class="right">${firmwareInfo.get('profileVersion')}</div>`;
+        deviceInfo.innerHTML = div;
+      })
       .then(() => statusText.textContent = 'Walk...')
       .then(() => miBand.startNotifications().then(handleNotifications))
       .then(() => {
@@ -40,7 +53,6 @@ statusText.addEventListener('click', function () {
 
 function handleNotifications(notifiCharacteristic) {
   notifiCharacteristic.addEventListener('characteristicvaluechanged', event => {
-    console.log(event.target.value.getUint8(0));
   })
 }
 
@@ -48,6 +60,7 @@ function handleSteps(stepsCharacteristic) {
   stepsCharacteristic.addEventListener('characteristicvaluechanged', event => {
     var data = event.target.value;
     var steps = miBand.parseSteps(data);
+    console.debug('NOTIFY', stepsCharacteristic.uuid, steps);
 
     var today = new Date().toJSON().substr(0, 10);
     localStorage.setItem(today, (steps - offset > 0) ? steps - offset : steps);
