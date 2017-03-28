@@ -13,12 +13,6 @@ statusText.addEventListener('click', function () {
     let arr = [];
 
     miBand.connect()
-      .then(() => statusText.textContent = 'Walk...')
-      .then(() => miBand.startNotifications().then(handleNotifications))
-      .then(() => {
-        let reset = (localStorage.length === 0);
-        return miBand.pair(reset);
-      })
       .then(() => miBand.getDeviceName())
       .then(data => arr.push(data))
       .then(() => miBand.getBatteryInfo())
@@ -39,6 +33,12 @@ statusText.addEventListener('click', function () {
         <div class="left">Profile version:</div><div class="right">${firmwareInfo.get('profileVersion')}</div>`;
         deviceInfo.innerHTML = div;
         document.querySelector('#challenge .link').style.display = 'block';
+      })
+      .then(() => statusText.textContent = 'Walk...')
+      .then(() => miBand.startNotifications().then(handleNotifications))
+      .then(() => {
+        let reset = (localStorage.length === 0);
+        return miBand.pair(reset);
       })
       .then(() => miBand.getSteps())
       .then(steps => {
