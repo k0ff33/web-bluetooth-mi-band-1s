@@ -85,6 +85,44 @@ body {
   font-size: 66%;
 }
 
+#challenge {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+#challenge::before {
+  content: 'Challenge';
+  display: block;
+  padding-bottom: 4px;
+  text-transform: uppercase;
+  font-size: 70%;
+  font-weight: bold;
+  border-bottom: 1px solid rgba(255,255,255,.5);
+  margin-bottom: 8px;
+}
+
+#challenge a {
+  font-size: 1.5rem;
+}
+
+#challenge .link {
+  display: none;
+}
+
+#result {
+  margin-top: 1rem;
+}
+
+#result::before {
+  content: 'Leader';
+  display: block;
+  padding-bottom: 4px;
+  text-transform: uppercase;
+  font-size: 70%;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
 /**
   * Simple Grid CSS 
   * http://www.simplegrid.io/
