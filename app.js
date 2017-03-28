@@ -10,18 +10,25 @@ statusText.addEventListener('click', function () {
     return;
   } else {
     statusText.textContent = 'Connecting...';
+    let arr = [];
+
     miBand.connect()
+      .then(() => statusText.textContent = 'Walk...')
+      .then(() => miBand.startNotifications().then(handleNotifications))
       .then(() => {
-        return Promise.all([
-          miBand.getDeviceName(),
-          miBand.getBatteryInfo(),
-          miBand.getDeviceInfo()
-        ]);
+        let reset = (localStorage.length === 0);
+        return miBand.pair(reset);
       })
-      .then(data => {
-        let deviceName = data[0].replace(/[^a-zA-Z0-9]/g,'');
-        let batteryInfo = data[1];
-        let firmwareInfo = data[2];
+      .then(() => miBand.getDeviceName())
+      .then(data => arr.push(data))
+      .then(() => miBand.getBatteryInfo())
+      .then(data => arr.push(data))
+      .then(() => miBand.getDeviceInfo())
+      .then(data => arr.push(data))
+      .then(() => {
+        let deviceName = arr[0].replace(/[^a-zA-Z0-9]/g,'');
+        let batteryInfo = arr[1];
+        let firmwareInfo = arr[2];
 
         let div = `
         <div class="left">Name:</div><div class="right">${deviceName}</div>
@@ -32,12 +39,6 @@ statusText.addEventListener('click', function () {
         <div class="left">Profile version:</div><div class="right">${firmwareInfo.get('profileVersion')}</div>`;
         deviceInfo.innerHTML = div;
         document.querySelector('#challenge .link').style.display = 'block';
-      })
-      .then(() => statusText.textContent = 'Walk...')
-      .then(() => miBand.startNotifications().then(handleNotifications))
-      .then(() => {
-        let reset = (localStorage.length === 0);
-        return miBand.pair(reset);
       })
       .then(() => miBand.getSteps())
       .then(steps => {
